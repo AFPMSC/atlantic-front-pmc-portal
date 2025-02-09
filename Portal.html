@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlantic Front PMC Work Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f8f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 350px;
+        }
+        h2 {
+            color: #333;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .block-message {
+            display: none;
+            color: red;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .copyright {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+    <script>
+        // Disable right-click
+        document.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+        });
+
+        // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "F12" || 
+                (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || 
+                (e.ctrlKey && e.key === "U")) {
+                e.preventDefault();
+            }
+        });
+
+        // Disable console access
+        (function() {
+            var devtools = /./;
+            devtools.toString = function() {
+                window.location.href = "about:blank"; // Redirect if console is opened
+            };
+            console.log("%c", devtools);
+        })();
+    </script>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Atlantic Front PMC Work Portal</h2>
+        <input type="text" id="workId" placeholder="Work ID" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="text" id="securityCode" placeholder="Security Code" required>
+        <input type="text" id="afPortal" placeholder="AF Portal Number" required>
+        <button onclick="secureLogin()">Login</button>
+        <p class="error" id="errorMessage"></p>
+        <p class="block-message" id="blockMessage">Too many attempts! Try again in 24 hours.</p>
+        <p class="copyright">© 2025 Atlantic Front PMC. All rights reserved.</p>
+    </div>
+
+    <script>
+        // Encrypt the correct login credentials
+        const encryptedData = btoa(JSON.stringify({ workId: "BIRK", password: "B", securityCode: "B", afPortal: "AF" }));
+
+        let attempts = localStorage.getItem('loginAttempts') ? parseInt(localStorage.getItem('loginAttempts')) : 0;
+        let blockTime = localStorage.getItem('blockTime');
+
+        function checkBlockStatus() {
+            if (blockTime) {
+                let currentTime = new Date().getTime();
+                let timePassed = (currentTime - blockTime) / 1000 / 60 / 60; // Convert to hours
+
+                if (timePassed >= 24) {
+                    localStorage.removeItem('blockTime');
+                    attempts = 0;
+                    localStorage.setItem('loginAttempts', attempts);
+                } else {
+                    document.getElementById("blockMessage").style.display = "block";
+                    document.querySelector("button").disabled = true;
+                }
+            }
+        }
+
+        function secureLogin() {
+            if (attempts >= 3) {
+                localStorage.setItem('blockTime', new Date().getTime());
+                document.getElementById("blockMessage").style.display = "block";
+                document.querySelector("button").disabled = true;
+                return;
+            }
+
+            let workId = document.getElementById("workId").value;
+            let password = document.getElementById("password").value;
+            let securityCode = document.getElementById("securityCode").value;
+            let afPortal = document.getElementById("afPortal").value;
+
+            let decryptedData = JSON.parse(atob(encryptedData));
+
+            if (workId === decryptedData.workId && password === decryptedData.password && securityCode === decryptedData.securityCode && afPortal === decryptedData.afPortal) {
+                window.location.href = "https://www.forsvaret.no";
+            } else {
+                attempts++;
+                localStorage.setItem('loginAttempts', attempts);
+                document.getElementById("errorMessage").innerText = "Invalid credentials. Attempts left: " + (3 - attempts);
+                if (attempts >= 3) {
+                    localStorage.setItem('blockTime', new Date().getTime());
+                    document.getElementById("blockMessage").style.display = "block";
+                    document.querySelector("button").disabled = true;
+                }
+            }
+        }
+
+        checkBlockStatus();
+    </script>
+
+</body>
+</html>
